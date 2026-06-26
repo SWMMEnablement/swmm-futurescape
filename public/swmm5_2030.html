@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Storm Water Management Model (SWMM) — 2030 Edition</title>
+<style>
+  :root{
+    --bg:#f6f6f4; --surface:#ffffff; --ink:#202122; --muted:#54595d;
+    --link:#0645ad; --link-visited:#0b0080; --border:#a2a9b1; --soft:#eaecf0;
+    --accent:#36c; --accent-2:#14866d; --warn:#b32424;
+    --grad: linear-gradient(135deg,#0ea5e9 0%, #14866d 60%, #0b3d91 100%);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Linux Libertine','Georgia','Times',serif;background:var(--bg);color:var(--ink);line-height:1.6}
+  header.site{background:var(--grad);color:#fff;padding:18px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  header.site .logo{font-family:Georgia,serif;font-size:22px;font-weight:700;letter-spacing:.3px}
+  header.site .sub{font-size:13px;opacity:.9}
+  .container{max-width:1100px;margin:0 auto;padding:0 18px}
+  nav.tabs{background:#fff;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+  nav.tabs .tabwrap{display:flex;flex-wrap:wrap;gap:2px;max-width:1100px;margin:0 auto;padding:0 8px}
+  nav.tabs button{
+    appearance:none;border:1px solid transparent;border-bottom:none;background:transparent;
+    padding:12px 16px;font-size:14px;font-family:inherit;color:var(--muted);cursor:pointer;
+    border-top-left-radius:6px;border-top-right-radius:6px;
+  }
+  nav.tabs button:hover{color:var(--ink);background:var(--soft)}
+  nav.tabs button.active{
+    color:var(--ink);background:var(--bg);border-color:var(--border);
+    font-weight:600;position:relative;top:1px
+  }
+  main{padding:24px 0 60px}
+  article{display:none;background:var(--surface);border:1px solid var(--border);padding:24px 28px;border-radius:4px}
+  article.active{display:block}
+  h1{font-family:'Linux Libertine',Georgia,serif;font-size:30px;margin:0 0 4px;border-bottom:1px solid var(--border);padding-bottom:8px}
+  h2{font-family:'Linux Libertine',Georgia,serif;font-size:22px;margin:28px 0 8px;border-bottom:1px solid var(--soft);padding-bottom:4px}
+  h3{font-size:17px;margin:20px 0 6px}
+  p{margin:8px 0}
+  a{color:var(--link);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .meta{color:var(--muted);font-size:13px;margin-bottom:14px;font-family:Arial,Helvetica,sans-serif}
+  .infobox{
+    float:right;width:300px;border:1px solid var(--border);background:#f8f9fa;
+    padding:10px 12px;margin:0 0 14px 18px;font-size:13px;font-family:Arial,Helvetica,sans-serif;border-radius:3px
+  }
+  .infobox h4{margin:0 0 8px;font-size:14px;border-bottom:1px solid var(--soft);padding-bottom:4px}
+  .infobox dl{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;margin:0}
+  .infobox dt{color:var(--muted)}
+  .notice{
+    border:1px solid #f0c36d;background:#fffbea;padding:10px 14px;border-radius:4px;
+    font-family:Arial,Helvetica,sans-serif;font-size:13.5px;margin:0 0 16px
+  }
+  .toc{
+    border:1px solid var(--border);background:#f8f9fa;padding:10px 14px;
+    display:inline-block;margin:8px 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:13.5px;min-width:280px
+  }
+  .toc h4{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+  .toc ol{margin:0;padding-left:18px}
+  table.wiki{border-collapse:collapse;width:100%;margin:12px 0;font-size:13.5px;font-family:Arial,Helvetica,sans-serif}
+  table.wiki th,table.wiki td{border:1px solid var(--border);padding:6px 8px;text-align:left;vertical-align:top}
+  table.wiki th{background:#eaecf0}
+  figure{margin:14px 0;border:1px solid var(--border);padding:8px;background:#fafafa;border-radius:4px}
+  figcaption{font-size:12px;color:var(--muted);text-align:center;margin-top:6px}
+  .placeholder{
+    display:flex;align-items:center;justify-content:center;height:160px;
+    background:repeating-linear-gradient(45deg,#e8eef5,#e8eef5 10px,#dde5ef 10px,#dde5ef 20px);
+    color:#5a6b80;font-family:Arial;font-size:13px;border-radius:3px
+  }
+  .badge{display:inline-block;background:var(--accent-2);color:#fff;font-size:11px;padding:2px 8px;border-radius:999px;font-family:Arial;letter-spacing:.4px;margin-left:6px;vertical-align:middle}
+  .badge.future{background:#7c3aed}
+  .badge.ai{background:#0ea5e9}
+  .badge.policy{background:#b45309}
+  .badge.open{background:#14866d}
+  .grid{display:grid;gap:14px}
+  .grid.cols-2{grid-template-columns:repeat(2,1fr)}
+  .grid.cols-3{grid-template-columns:repeat(3,1fr)}
+  .card{border:1px solid var(--border);padding:12px 14px;border-radius:4px;background:#fbfbfb}
+  .card h3{margin-top:0}
+  .quote{border-left:4px solid var(--accent);padding:6px 14px;color:#333;background:#f3f7fb;margin:10px 0;font-size:14px}
+  .pill{display:inline-block;font-size:11px;background:#eaecf0;border:1px solid var(--border);padding:2px 8px;border-radius:999px;margin:2px 4px 2px 0;font-family:Arial}
+  hr{border:none;border-top:1px solid var(--soft);margin:18px 0}
+  ul,ol{margin:8px 0 8px 22px}
+  code{background:#f1f3f5;padding:1px 5px;border-radius:3px;font-size:13px}
+  footer{color:var(--muted);font-size:12px;text-align:center;padding:20px;font-family:Arial}
+  @media (max-width:720px){
+    .infobox{float:none;width:100%;margin:0 0 14px}
+    .grid.cols-2,.grid.cols-3{grid-template-columns:1fr}
+  }
+
+  html{scroll-behavior:smooth}
+  h2[id]{scroll-margin-top:70px}
+  .toc a{color:var(--link);text-decoration:none}
+  .toc a:hover{text-decoration:underline}
+  .toc a.toc-active{
+    background:linear-gradient(90deg, rgba(20,134,109,.18), rgba(20,134,109,0));
+    color:var(--ink);font-weight:700;
+    border-left:3px solid var(--accent-2);padding:1px 6px;margin-left:-9px;border-radius:2px;
+  }
+  .toc li{transition:background .2s}
+  .toc ol ol{margin-top:4px}
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="logo">📘 Wikipedia · The 2030 Archive</div>
+  <div class="sub">Multi-version article view — compare today's page with four 2030 alternates</div>
+</header>
+
+<nav class="tabs" role="tablist">
+  <div class="tabwrap">
+    <button class="tab-btn active" data-tab="t0" role="tab">Current (2024 snapshot)</button>
+    <button class="tab-btn" data-tab="t1" role="tab">2030 · AI-Native Edition</button>
+    <button class="tab-btn" data-tab="t2" role="tab">2030 · Climate-Resilient Cities</button>
+    <button class="tab-btn" data-tab="t3" role="tab">2030 · Digital Twin &amp; IoT</button>
+    <button class="tab-btn" data-tab="t4" role="tab">2030 · Open-Science &amp; Equity</button>
+  </div>
+</nav>
+
+<main class="container">
+
+<!-- ============== TAB 0: CURRENT WIKIPEDIA ============== -->
+<article id="t0" class="active">
+  <h1>Storm Water Management Model</h1>
+  <div class="meta">From Wikipedia, the free encyclopedia · current revision</div>
+
+  <div class="notice">
+    ⓘ <strong>This article contains an excessive amount of intricate detail.</strong>
+    Please help improve it by spinning off or relocating relevant information and removing excessive
+    detail that goes against Wikipedia's inclusion policy. <em>(August 2021)</em>
+  </div>
+
+  <aside class="infobox">
+    <h4>Storm Water Management Model</h4>
+    <dl>
+      <dt>Developer(s)</dt><dd>US EPA, CDM, UF, OSU</dd>
+      <dt>Initial release</dt><dd>1971</dd>
+      <dt>Stable release</dt><dd>SWMM 5.2.4 (2023)</dd>
+      <dt>Written in</dt><dd>C (engine), Delphi (GUI)</dd>
+      <dt>Operating system</dt><dd>Windows, Unix (recompiled)</dd>
+      <dt>Type</dt><dd>Hydrology / hydraulics model</dd>
+      <dt>License</dt><dd>Public domain</dd>
+      <dt>Website</dt><dd>epa.gov/water-research/swmm</dd>
+    </dl>
+  </aside>
+
+  <p>The United States Environmental Protection Agency (EPA) <strong>Storm Water Management Model (SWMM)</strong>
+  is a dynamic rainfall–runoff–subsurface runoff simulation model used for single-event to long-term
+  (continuous) simulation of the surface/subsurface hydrology quantity and quality from primarily
+  urban/suburban areas.</p>
+
+  <p>It can simulate the rainfall-runoff, runoff, evaporation, infiltration and groundwater connection
+  for roofs, streets, grassed areas, rain gardens and ditches and pipes. The hydrology component of
+  SWMM operates on a collection of subcatchment areas divided into impervious and pervious areas with
+  and without depression storage to predict runoff and pollutant loads. Low impact development (LID)
+  and best management practice areas on the subcatchment can be modeled to reduce runoff. The routing
+  or hydraulics section transports water and water-quality constituents through a system of closed
+  pipes, open channels, storage/treatment devices, ponds, pumps, orifices, weirs, outlets, outfalls
+  and other regulators.</p>
+
+  <div class="toc">
+    <h4>Contents</h4>
+    <ol>
+      <li><a href="#t0-program-description">Program description</a></li>
+      <li><a href="#t0-history">History</a></li>
+      <li><a href="#t0-swmm-conceptual-model">SWMM conceptual model</a></li>
+      <li><a href="#t0-model-parameters">Model parameters</a></li>
+      <li><a href="#t0-hydrology-and-hydraulics-capabilities">Hydrology and hydraulics capabilities</a>
+        <ol>
+          <li><a href="#t0-classical-infiltration-method">Classical infiltration method (Modified Horton)</a></li>
+          <li><a href="#t0-greenampt-method">Green–Ampt method</a></li>
+          <li><a href="#t0-curve-number-method">Curve number method</a></li>
+        </ol>
+      </li>
+      <li><a href="#t0-routing-options">Routing options</a></li>
+      <li><a href="#t0-integrated-hydrologyhydraulics">Integrated hydrology/hydraulics</a></li>
+      <li><a href="#t0-low-impact-development-components">Low-impact development components</a></li>
+      <li><a href="#t0-swmm5-components">SWMM5 components</a></li>
+      <li><a href="#t0-swmm-3-and-4-to-5-converter">SWMM 3 and 4 to 5 converter</a></li>
+      <li><a href="#t0-swmm-cat-climate-change-add-on">SWMM-CAT Climate Change Add-On</a></li>
+      <li><a href="#t0-epa-stormwater-calculator-based-on-swmm5">EPA stormwater calculator based on SWMM5</a></li>
+      <li><a href="#t0-swmm-platforms">SWMM platforms</a></li>
+    </ol>
+  </div>
+
+  <h2 id="t0-program-description">Program description</h2>
+  <p>SWMM is a dynamic rainfall-runoff-routing simulation model used for single event or long-term
+  (continuous) simulation of runoff quantity and quality from primarily urban areas. The runoff
+  component operates on a collection of subcatchments that receive precipitation and generate runoff
+  and pollutant loads. The routing portion transports this runoff through pipes, channels,
+  storage/treatment devices, pumps, and regulators.</p>
+
+  <p>SWMM accounts for hydrologic processes including time-varying rainfall; evaporation of standing
+  surface water; snow accumulation and melting; rainfall interception from depression storage;
+  infiltration into unsaturated soil layers; percolation into groundwater layers; interflow between
+  groundwater and the drainage system; nonlinear reservoir routing of overland flow; and capture
+  and retention via LID practices.</p>
+
+  <figure>
+    <div class="placeholder">Figure 1 — SWMM 5 Model Simulation GUI</div>
+    <figcaption>SWMM 5 graphical interface for editing watershed input and viewing results.</figcaption>
+  </figure>
+
+  <h2 id="t0-history">History</h2>
+  <p>SWMM was first developed between 1969–1971 and has undergone four major upgrades: Version 2
+  (1973–75), Version 3 (1979–81), Version 4 (1985–88), and Version 5 (2001–04). The current edition,
+  Version 5.2.4, is a complete re-write in C and runs under Windows and (recompiled) Unix.</p>
+
+  <table class="wiki">
+    <thead><tr><th>Release</th><th>Version</th><th>Developers</th><th>FEMA</th><th>LID</th></tr></thead>
+    <tbody>
+      <tr><td>08/07/2023</td><td>SWMM 5.2.4</td><td>EPA</td><td>Yes</td><td>Yes</td></tr>
+      <tr><td>02/01/2022</td><td>SWMM 5.2</td><td>EPA</td><td>Yes</td><td>Yes</td></tr>
+      <tr><td>02/18/2020</td><td>SWMM 5.1.014</td><td>EPA</td><td>Yes</td><td>Yes</td></tr>
+      <tr><td>2001–2004</td><td>SWMM 5</td><td>EPA, CDM</td><td>No</td><td>No</td></tr>
+      <tr><td>1988–2004</td><td>SWMM 4</td><td>UF, OSU, CDM</td><td>No</td><td>No</td></tr>
+      <tr><td>1969–1971</td><td>SWMM 1</td><td>UF, CDM, M&amp;E</td><td>No</td><td>No</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="t0-swmm-conceptual-model">SWMM conceptual model</h2>
+  <p>SWMM conceptualizes a drainage system as flows between several environmental compartments:
+  <strong>Atmosphere</strong> (rain gages), <strong>Land Surface</strong> (subcatchments and LIDs),
+  <strong>Groundwater</strong> (aquifers), and <strong>Transport</strong> (nodes, links, storage).</p>
+
+  <h2 id="t0-model-parameters">Model parameters</h2>
+  <p>Simulated parameters include surface roughness, depression storage, slope, and flow path length
+  for subcatchments; Horton max/min rates and decay constant, Green-Ampt hydraulic conductivity,
+  initial moisture deficit and suction head, or NRCS (SCS) curve number for infiltration; Manning's
+  roughness for conduits; and buildup/washoff function coefficients and first-order decay coefficients
+  for water quality.</p>
+
+  <h2 id="t0-hydrology-and-hydraulics-capabilities">Hydrology and hydraulics capabilities</h2>
+  <p>SWMM 5 accounts for time-varying rainfall, evaporation, snow accumulation and melting,
+  depression storage interception, infiltration, percolation to groundwater, interflow, and
+  nonlinear reservoir routing of overland flow. Its hydraulic engine routes through pipes, channels,
+  storage units, and regulators, supporting backwater, surcharging, reverse flow, and pressurized
+  flow.</p>
+
+  <h3 id="t0-classical-infiltration-method">Classical infiltration method (Modified Horton)</h3>
+  <p>Based on empirical observations that infiltration decays exponentially from an initial maximum
+  rate to a minimum rate over a long rainfall event. The Modified Horton variant uses cumulative
+  infiltration in excess of the minimum rate as its state variable, giving a more accurate estimate
+  at low rainfall intensities.</p>
+
+  <h3 id="t0-greenampt-method">Green–Ampt method</h3>
+  <p>Assumes a sharp wetting front separates saturated soil above from soil at initial moisture
+  content below. Inputs are initial moisture deficit, hydraulic conductivity, and suction head at
+  the wetting front; recovery during dry periods is empirically related to hydraulic conductivity.</p>
+
+  <h3 id="t0-curve-number-method">Curve number method</h3>
+  <p>Adopted from the NRCS (SCS) curve number method. Total infiltration capacity is derived from
+  the tabulated curve number and depleted as a function of cumulative rainfall and remaining
+  capacity, with a recovery time for fully saturated soils.</p>
+
+  <h2 id="t0-routing-options">Routing options</h2>
+  <p>SWMM supports steady-flow, kinematic wave, and full dynamic wave (Saint-Venant) routing. Dynamic
+  wave routing handles backwater, surcharging, reverse flow, and pressurized flow at the cost of
+  shorter time steps.</p>
+
+  <h2 id="t0-integrated-hydrologyhydraulics">Integrated hydrology/hydraulics</h2>
+  <p>A major advance in SWMM 5 is the integration of subsurface flow with hydraulic computation of
+  the drainage network. The engine solves surface runoff, subsurface hydrology, and climate forcing
+  at the hydrologic time step, then routes links and nodes at a (typically smaller) hydraulic time
+  step using interpolated boundary conditions. Versions newer than 5.1.007 allow global monthly
+  adjustments to rainfall, temperature, and evaporation for climate-change studies.</p>
+
+
+  <h2 id="t0-low-impact-development-components">Low-impact development components</h2>
+  <p>LID controls in SWMM 5 include bioretention cells, rain gardens, green roofs, infiltration
+  trenches, permeable pavement, rain barrels/cisterns, and vegetative swales. Each is composed of
+  surface, pavement, soil, storage, drainmat, and drain layers as appropriate.</p>
+
+  <h2 id="t0-swmm5-components">SWMM5 components</h2>
+  <p>The major SWMM 5 objects are rain gages, subcatchments, nodes (junction, outfall, storage,
+  divider), links (with many closed and open conduit shapes), pollutants, land uses, time patterns,
+  curves, time series, control rules, transects, aquifers, RDII unit hydrographs, snowmelt parameter
+  sets, custom shapes, and LID treatment units.</p>
+
+  <h2 id="t0-swmm-3-and-4-to-5-converter">SWMM 3 and 4 to 5 converter</h2>
+  <p>A bundled converter migrates up to two legacy SWMM 3 / 4 input files (typically Runoff +
+  Transport or Runoff + Extran) into a single SWMM 5 <code>.inp</code> dataset. SWMM 3 / 3.5 files
+  are fixed format; SWMM 4 files are free format; the converter auto-detects the version. Converted
+  pieces can be merged with a text editor.</p>
+
+  <h2 id="t0-swmm-cat-climate-change-add-on">SWMM-CAT Climate Change Add-On</h2>
+  <p>The Storm Water Management Model Climate Adjustment Tool (SWMM-CAT, 2014) applies
+  location-specific monthly adjustments to air temperature, evaporation, precipitation, and the
+  24-hour design storm. Adjustments are derived from CMIP3 climate models via EPA's CREAT project
+  and selected by latitude/longitude or ZIP code, time horizon (near- or far-term), and outcome
+  (Hot/Dry, Warm/Wet, or Median).</p>
+
+  <h2 id="t0-epa-stormwater-calculator-based-on-swmm5">EPA stormwater calculator based on SWMM5</h2>
+  <p>The EPA National Stormwater Calculator (SWC), released in 2013, is a desktop application built
+  on the SWMM 5 engine that estimates annual rainwater volume and runoff frequency for any US site
+  using national soil, topography, rainfall, and evaporation databases. Users select land cover and
+  LID controls (rain garden, green roof, permeable pavement, cistern, etc.) to compare scenarios.</p>
+
+  <h2 id="t0-swmm-platforms">SWMM platforms</h2>
+  <p>Commercial and open-source platforms built on the SWMM5 engine include PCSWMM (CHI), InfoSWMM
+  (Innovyze), XPSWMM, SewerGEMS (Bentley), MIKE URBAN (DHI), and PySWMM (OWA).</p>
+
+  <p><em>References, See Also, and External Links omitted in this snapshot for brevity.</em></p>
+</article>
+
+<!-- ============== TAB 1: AI-NATIVE 2030 ============== -->
+<article id="t1">
+  <h1>Storm Water Management Model <span class="badge ai">2030 · AI-Native</span></h1>
+  <div class="meta">From Wikipedia, the free encyclopedia · revision 2030-03-14 · stable</div>
+
+  <aside class="infobox">
+    <h4>SWMM 7 “Hydra”</h4>
+    <dl>
+      <dt>Developer</dt><dd>US EPA + Open Water Analytics</dd>
+      <dt>Stable release</dt><dd>SWMM 7.4 (Feb 2030)</dd>
+      <dt>Engine</dt><dd>C / Rust + ONNX inference</dd>
+      <dt>Solvers</dt><dd>Dynamic-wave, PINN-accelerated</dd>
+      <dt>Runtime</dt><dd>CPU, GPU, WebGPU, Edge TPU</dd>
+      <dt>License</dt><dd>Public domain (engine) · Apache-2.0 (ML)</dd>
+    </dl>
+  </aside>
+
+  <p>The <strong>Storm Water Management Model (SWMM)</strong>, as of its 2030 release line, is a
+  hybrid physics–machine-learning platform for simulating urban hydrology and hydraulics. Where
+  earlier versions relied solely on the Saint-Venant equations and empirical infiltration laws,
+  SWMM 7 couples those solvers with <em>physics-informed neural networks (PINNs)</em>, learned
+  closures for sub-grid processes, and generative downscaling of climate forcings.</p>
+
+  <div class="toc">
+    <h4>Contents</h4>
+    <ol>
+      <li><a href="#t1-from-swmm-5-to-swmm-7">From SWMM 5 to SWMM 7</a></li>
+      <li><a href="#t1-physics-informed-neural-solvers">Physics-informed neural solvers</a></li>
+      <li><a href="#t1-generative-rainfall-and-climate-forcing">Generative rainfall &amp; climate forcing</a></li>
+      <li><a href="#t1-autocalibration-and-inverse-modeling">Autocalibration and inverse modeling</a></li>
+      <li><a href="#t1-natural-language-model-authoring">Natural-language model authoring</a></li>
+      <li><a href="#t1-benchmarks-and-validation">Benchmarks &amp; validation</a></li>
+      <li><a href="#t1-reception-and-controversy">Reception and controversy</a></li>
+    </ol>
+  </div>
+
+  <h2 id="t1-from-swmm-5-to-swmm-7">From SWMM 5 to SWMM 7</h2>
+  <p>Following SWMM 5.2.x (2023) and the SWMM 6 “Open Engine” refactor in 2026, SWMM 7 introduced
+  pluggable solver back-ends. The default <code>dynwave-pinn</code> solver retains the canonical
+  Saint-Venant formulation at junctions and conduits, but accelerates the iterative successive-
+  approximation step with a learned preconditioner trained on more than 12 million historical model
+  runs contributed through the EPA SWMM Commons.</p>
+
+  <h2 id="t1-physics-informed-neural-solvers">Physics-informed neural solvers</h2>
+  <p>PINNs in SWMM 7 are constrained to conserve mass and momentum at every reporting step.
+  Benchmarks against analytical Stoker dam-break and Preissmann-slot pressurization tests show
+  errors below 0.5% while running 8–40× faster than the legacy SWMM 5 dynamic-wave engine on
+  citywide networks (&gt;500k links).</p>
+
+  <div class="grid cols-3">
+    <div class="card"><h3>Learned closures</h3><p>Sub-grid LID, street-gutter, and inlet-capture
+    behavior replaced with calibrated neural surrogates.</p></div>
+    <div class="card"><h3>Differentiable</h3><p>The full pipeline is autograd-friendly, enabling
+    gradient-based calibration against gauge data.</p></div>
+    <div class="card"><h3>Uncertainty</h3><p>Ensemble heads emit per-link flow PDFs, not point
+    estimates — finally usable for risk-based design.</p></div>
+  </div>
+
+  <h2 id="t1-generative-rainfall-and-climate-forcing">Generative rainfall &amp; climate forcing</h2>
+  <p>SWMM-CAT, the 2014 climate add-on, was superseded in 2028 by <strong>SWMM-Gen</strong>, a
+  diffusion model trained on CMIP7 ensembles and on 40 years of NEXRAD MRMS radar. SWMM-Gen
+  produces spatially coherent, sub-kilometer storm fields conditioned on a chosen SSP scenario and
+  return period. Users can prompt: <code>"100-yr 3-hr convective storm, SSP3-7.0, Phoenix 2055"</code>
+  and receive a 250 m × 250 m × 5 min hyetograph series ready for ingestion.</p>
+
+  <h2 id="t1-autocalibration-and-inverse-modeling">Autocalibration and inverse modeling</h2>
+  <p>SWMM 7's <code>swmm calibrate</code> command takes a list of telemetry streams (flow, depth,
+  rainfall, water-quality) and returns posterior distributions over Manning's n, depression
+  storage, Horton parameters, and per-subcatchment imperviousness. Variational inference replaces
+  the manual nudging that dominated practice through the 2010s.</p>
+
+  <h2 id="t1-natural-language-model-authoring">Natural-language model authoring</h2>
+  <div class="quote">"Add a 0.4-ha bioretention cell at junction J-217, draining 60% of the
+  adjacent parking lot, with 18 in of engineered soil and an underdrain at 12 in." → SWMM
+  generates the LID Control, modifies the subcatchment routing, and re-runs the design storm.</div>
+
+  <h2 id="t1-benchmarks-and-validation">Benchmarks &amp; validation</h2>
+  <table class="wiki">
+    <thead><tr><th>Benchmark</th><th>SWMM 5.2.4</th><th>SWMM 7.4 (PINN)</th><th>Speed-up</th></tr></thead>
+    <tbody>
+      <tr><td>NYC DEP citywide (612k links)</td><td>14 h 22 min</td><td>23 min</td><td>37×</td></tr>
+      <tr><td>Houston Brays Bayou</td><td>3 h 04 min</td><td>11 min</td><td>16×</td></tr>
+      <tr><td>EPA QA Example #7</td><td>2.1 s</td><td>0.4 s</td><td>5×</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="t1-reception-and-controversy">Reception and controversy</h2>
+  <p>Adoption has been brisk in research circles and at consultancies but slower at regulators.
+  FEMA conditionally approved SWMM 7 for NFIP modeling in 2029 only when run in
+  <code>physics-strict</code> mode (PINN closures disabled). Critics argue that learned closures
+  obscure the auditable lineage that public-sector models require; proponents counter that the
+  weights, training data, and provenance manifests are all in the public domain.</p>
+</article>
+
+<!-- ============== TAB 2: CLIMATE-RESILIENT CITIES ============== -->
+<article id="t2">
+  <h1>Storm Water Management Model <span class="badge policy">2030 · Climate-Resilient Cities</span></h1>
+  <div class="meta">From Wikipedia, the free encyclopedia · revision 2030-06-02</div>
+
+  <aside class="infobox">
+    <h4>SWMM in policy</h4>
+    <dl>
+      <dt>Mandated by</dt><dd>EPA NPDES 2027 rule</dd>
+      <dt>Adopted</dt><dd>43 US states · EU CSO Directive 2028</dd>
+      <dt>Design horizon</dt><dd>2080, SSP2-4.5 baseline</dd>
+      <dt>Equity overlay</dt><dd>EJScreen 3 integration</dd>
+    </dl>
+  </aside>
+
+  <p>By 2030, the <strong>Storm Water Management Model</strong> has shifted from a niche
+  engineering tool to a regulatory <em>lingua franca</em>. After a decade of compounding pluvial
+  flood disasters — Houston 2024, Valencia 2024, Dubai 2024, Seoul 2026, Recife 2028 — federal,
+  state, and municipal codes increasingly require SWMM-based forward-looking design rather than
+  the historical Atlas-14 return periods that proved obsolete.</p>
+
+  <div class="toc">
+    <h4>Contents</h4>
+    <ol>
+      <li><a href="#t2-the-20262029-regulatory-pivot">The 2026–2029 regulatory pivot</a></li>
+      <li><a href="#t2-forward-looking-idf-curves">Forward-looking IDF curves</a></li>
+      <li><a href="#t2-compound-flood-coupling">Compound flood coupling</a></li>
+      <li><a href="#t2-green-infrastructure-at-scale">Green infrastructure at scale</a></li>
+      <li><a href="#t2-equity-and-ej-integration">Equity and EJ integration</a></li>
+      <li><a href="#t2-case-studies">Case studies</a></li>
+    </ol>
+  </div>
+
+  <h2 id="t2-the-20262029-regulatory-pivot">The 2026–2029 regulatory pivot</h2>
+  <p>The EPA's 2027 revision of the NPDES MS4 General Permit explicitly references SWMM 6+ as the
+  reference implementation for compliance modeling. The EU's revised Urban Wastewater Treatment
+  Directive (2028) requires combined-sewer-overflow assessments to be reproducible with an
+  open-source engine — in practice, SWMM.</p>
+
+  <h2 id="t2-forward-looking-idf-curves">Forward-looking IDF curves</h2>
+  <p>Static intensity-duration-frequency curves were retired from EPA guidance in 2028 in favor of
+  <strong>climate-adjusted IDF ensembles</strong>. SWMM projects now ship with an
+  <code>[ADAPTATION]</code> section pointing to a CMIP7-derived rainfall library indexed by SSP
+  scenario, decade, and downscaled grid cell.</p>
+
+  <figure>
+    <div class="placeholder">Figure — IDF envelope 2030 vs. 2080, SSP2-4.5 vs. SSP5-8.5</div>
+    <figcaption>Decadal shift of the 100-year, 1-hour design intensity for Miami-Dade.</figcaption>
+  </figure>
+
+  <h2 id="t2-compound-flood-coupling">Compound flood coupling</h2>
+  <p>SWMM 6.3 introduced bidirectional coupling with the SCHISM and ADCIRC coastal models via the
+  open OASIS3-MCT coupler. A junction with a coastal boundary now receives time-varying tide,
+  surge, and wave setup, allowing genuine compound-flood (pluvial + fluvial + coastal) simulation
+  inside a single SWMM run. This was the headline feature behind FEMA's 2029 Risk Rating 3.0
+  updates.</p>
+
+  <h2 id="t2-green-infrastructure-at-scale">Green infrastructure at scale</h2>
+  <div class="grid cols-2">
+    <div class="card"><h3>City-wide LID portfolios</h3><p>SWMM 7's <code>lid-optimize</code>
+    solver places thousands of bioretention cells, permeable pavements, and street planters
+    against a multi-objective cost / runoff / heat-island / equity Pareto front.</p></div>
+    <div class="card"><h3>Cooling co-benefits</h3><p>The new <code>[THERMAL]</code> section tracks
+    pavement temperature and ET cooling, letting heat planners and stormwater planners share one
+    model.</p></div>
+  </div>
+
+  <h2 id="t2-equity-and-ej-integration">Equity and EJ integration</h2>
+  <p>EPA's <strong>EJScreen 3</strong> demographic layers are now first-class SWMM inputs. Each
+  subcatchment carries an equity index; design optimizers can be constrained to deliver flood
+  benefits proportionally — or preferentially — to historically underserved neighborhoods. This
+  capability underpinned the 2029 Justice40 stormwater investment ruleset.</p>
+
+  <h2 id="t2-case-studies">Case studies</h2>
+  <table class="wiki">
+    <thead><tr><th>City</th><th>Year</th><th>SWMM use</th><th>Outcome</th></tr></thead>
+    <tbody>
+      <tr><td>New Orleans</td><td>2028</td><td>Compound flood master plan</td><td>$2.1B GI portfolio adopted</td></tr>
+      <tr><td>Jakarta</td><td>2029</td><td>SSP5-8.5 2080 design storm</td><td>Polder system resized 35%</td></tr>
+      <tr><td>Lagos</td><td>2030</td><td>Informal-settlement LID screening</td><td>14k cisterns + swales funded</td></tr>
+    </tbody>
+  </table>
+</article>
+
+<!-- ============== TAB 3: DIGITAL TWIN & IOT ============== -->
+<article id="t3">
+  <h1>Storm Water Management Model <span class="badge future">2030 · Digital Twin &amp; IoT</span></h1>
+  <div class="meta">From Wikipedia, the free encyclopedia · revision 2030-09-21</div>
+
+  <aside class="infobox">
+    <h4>SWMM-Live</h4>
+    <dl>
+      <dt>Mode</dt><dd>Real-time / hindcast / forecast</dd>
+      <dt>Telemetry</dt><dd>LoRaWAN, NB-IoT, 5G RedCap</dd>
+      <dt>Data assimilation</dt><dd>Ensemble Kalman Filter</dd>
+      <dt>Refresh</dt><dd>15 s nowcast · 6 h forecast</dd>
+      <dt>Control</dt><dd>Reinforcement-learned RTC</dd>
+    </dl>
+  </aside>
+
+  <p>By 2030, the dominant deployment of SWMM is no longer a desktop design study but a
+  continuously running <strong>urban water digital twin</strong>. SWMM-Live streams in tens of
+  thousands of sensor readings per minute, assimilates them into the running simulation, and
+  pushes control signals back to gates, pumps, valves, and adjustable weirs across the
+  collection system.</p>
+
+  <div class="toc">
+    <h4>Contents</h4>
+    <ol>
+      <li><a href="#t3-architecture-of-a-swmm-digital-twin">Architecture of a SWMM digital twin</a></li>
+      <li><a href="#t3-sensor-classes-and-ingestion">Sensor classes &amp; ingestion</a></li>
+      <li><a href="#t3-data-assimilation">Data assimilation</a></li>
+      <li><a href="#t3-real-time-control-rtc-with-reinforcement-learning">Real-time control (RTC) with reinforcement learning</a></li>
+      <li><a href="#t3-forecasting-workflow">Forecasting workflow</a></li>
+      <li><a href="#t3-reference-deployments">Reference deployments</a></li>
+      <li><a href="#t3-cybersecurity">Cybersecurity</a></li>
+    </ol>
+  </div>
+
+  <h2 id="t3-architecture-of-a-swmm-digital-twin">Architecture of a SWMM digital twin</h2>
+  <p>A canonical SWMM digital twin has four layers: the <strong>physical</strong> network of
+  pipes, gauges, and actuators; an <strong>edge</strong> tier that timestamps and buffers
+  telemetry; a <strong>twin core</strong> running an ensemble of SWMM instances (typically 64
+  members); and a <strong>decision</strong> layer surfacing dashboards and pushing setpoints
+  back to SCADA.</p>
+
+  <figure>
+    <div class="placeholder">Figure — SWMM-Live four-tier reference architecture</div>
+    <figcaption>Physical → Edge → Twin core → Decision, with bidirectional flows.</figcaption>
+  </figure>
+
+  <h2 id="t3-sensor-classes-and-ingestion">Sensor classes &amp; ingestion</h2>
+  <ul>
+    <li><strong>Level sensors</strong> — ultrasonic and radar in manholes; 1 min cadence.</li>
+    <li><strong>Flow meters</strong> — area-velocity, tracer-dilution; 5 min cadence.</li>
+    <li><strong>Inlet cameras</strong> — CV models infer clogging fraction.</li>
+    <li><strong>X-band radar &amp; mesonets</strong> — 250 m hyetograph nowcasts.</li>
+    <li><strong>Quality probes</strong> — turbidity, conductivity, fluorescent dissolved organic matter.</li>
+    <li><strong>Citizen reports</strong> — geotagged street-flood images via the EPA OpenFlood API.</li>
+  </ul>
+
+  <h2 id="t3-data-assimilation">Data assimilation</h2>
+  <p>SWMM-Live ships with an Ensemble Kalman Filter that updates depths at observed nodes every
+  15 seconds and propagates corrections upstream and downstream via the model's Jacobian. For
+  large networks, a localized EnKF with 5 km radius keeps the update tractable.</p>
+
+  <h2 id="t3-real-time-control-rtc-with-reinforcement-learning">Real-time control (RTC) with reinforcement learning</h2>
+  <div class="quote">In a 2029 South Bend pilot, RL-controlled inflatable dams and pump setpoints
+  reduced combined-sewer overflow volume by 71% over a rule-based RTC baseline, using only
+  existing actuators.</div>
+  <p>RL agents are trained inside a SWMM-Gym environment, then deployed with a hard safety
+  envelope: a model-predictive-control supervisor blocks any action whose simulated outcome
+  exceeds surcharge or overflow thresholds.</p>
+
+  <h2 id="t3-forecasting-workflow">Forecasting workflow</h2>
+  <ol>
+    <li>X-band radar nowcast → SWMM-Gen ensemble (32 members, 0–6 h).</li>
+    <li>Each member drives a SWMM-Live instance.</li>
+    <li>Probabilistic flood maps published every 5 minutes.</li>
+    <li>Alerts pushed to Wireless Emergency Alerts and city dashboards.</li>
+  </ol>
+
+  <h2 id="t3-reference-deployments">Reference deployments</h2>
+  <table class="wiki">
+    <thead><tr><th>Utility</th><th>Network size</th><th>Sensors</th><th>Live since</th></tr></thead>
+    <tbody>
+      <tr><td>South Bend, IN</td><td>~530 nodes</td><td>152</td><td>2024 (v1) → 2029 (SWMM-Live)</td></tr>
+      <tr><td>DC Water</td><td>~9,800 nodes</td><td>1,240</td><td>2027</td></tr>
+      <tr><td>Copenhagen Utilities</td><td>~14,200 nodes</td><td>2,800</td><td>2028</td></tr>
+      <tr><td>São Paulo SABESP</td><td>~21,000 nodes</td><td>3,150</td><td>2029</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="t3-cybersecurity">Cybersecurity</h2>
+  <p>Because SWMM-Live can actuate physical infrastructure, the 2029 EPA Cyber Hygiene Rule
+  classifies it as a regulated industrial control system. Mandatory features include signed
+  control messages, role-based dual approval for setpoint changes over a threshold, and an
+  air-gapped "model-only" fallback if telemetry integrity is lost.</p>
+</article>
+
+<!-- ============== TAB 4: OPEN SCIENCE & EQUITY ============== -->
+<article id="t4">
+  <h1>Storm Water Management Model <span class="badge open">2030 · Open Science &amp; Equity</span></h1>
+  <div class="meta">From Wikipedia, the free encyclopedia · revision 2030-11-08</div>
+
+  <aside class="infobox">
+    <h4>SWMM Commons</h4>
+    <dl>
+      <dt>Governance</dt><dd>EPA + OWA + UNESCO-IHE</dd>
+      <dt>Models hosted</dt><dd>~48,000 public networks</dd>
+      <dt>Standard</dt><dd>SWMM-JSON 1.0 (OGC, 2027)</dd>
+      <dt>License</dt><dd>CC0 / CC-BY 4.0</dd>
+      <dt>Mirrors</dt><dd>EPA, Zenodo, IPFS</dd>
+    </dl>
+  </aside>
+
+  <p>The 2030 SWMM ecosystem differs from its 2020 ancestor less in solver mathematics than in
+  <em>governance, accessibility, and reproducibility</em>. SWMM is now the canonical example
+  cited in the EPA's 2028 Open Models Directive: a federally developed model whose engine,
+  inputs, results, and uncertainty are all public by default.</p>
+
+  <div class="toc">
+    <h4>Contents</h4>
+    <ol>
+      <li><a href="#t4-from-inp-files-to-swmm-json">From INP files to SWMM-JSON</a></li>
+      <li><a href="#t4-the-swmm-commons">The SWMM Commons</a></li>
+      <li><a href="#t4-reproducibility-and-provenance">Reproducibility &amp; provenance</a></li>
+      <li><a href="#t4-browser-native-swmm">Browser-native SWMM</a></li>
+      <li><a href="#t4-capacity-building-in-the-global-south">Capacity building in the Global South</a></li>
+      <li><a href="#t4-critiques-and-open-problems">Critiques &amp; open problems</a></li>
+    </ol>
+  </div>
+
+  <h2 id="t4-from-inp-files-to-swmm-json">From INP files to SWMM-JSON</h2>
+  <p>The legacy fixed/free-format <code>.inp</code> text file — beloved and reviled in equal
+  measure since 1971 — was formally deprecated in 2029 in favor of <strong>SWMM-JSON 1.0</strong>,
+  an Open Geospatial Consortium standard. SWMM-JSON adds explicit units, CRS metadata, sensor
+  links, provenance, and a manifest of all data sources. Round-trip conversion from <code>.inp</code>
+  is bundled in every SWMM 7 distribution.</p>
+
+  <h2 id="t4-the-swmm-commons">The SWMM Commons</h2>
+  <p>The <strong>SWMM Commons</strong>, launched in 2026, hosts roughly 48,000 publicly shared
+  drainage network models from utilities, universities, and consultants worldwide. Each is
+  citable via DOI and tagged with land use, climate zone, and demographic context. The Commons
+  underpinned the training data for SWMM 7's neural closures and is, by EPA mandate, mirrored
+  on Zenodo and IPFS to survive registry outages.</p>
+
+  <div class="grid cols-3">
+    <div class="card"><h3>Reproducible runs</h3><p>Every uploaded run carries a hash of engine
+    version, inputs, and forcing — re-running anywhere reproduces results bit-for-bit (in
+    physics-strict mode).</p></div>
+    <div class="card"><h3>FAIR data</h3><p>Findable, Accessible, Interoperable, Reusable. The
+    Commons API speaks STAC and OGC API-Features natively.</p></div>
+    <div class="card"><h3>Equity tags</h3><p>Models can be filtered by EJ score, climate zone,
+    or income decile to surface chronically under-modeled communities.</p></div>
+  </div>
+
+  <h2 id="t4-reproducibility-and-provenance">Reproducibility &amp; provenance</h2>
+  <p>SWMM 7 emits a W3C PROV-O document alongside every run. Disputes over flood-disclosure
+  modeling — common in litigation through the late 2020s — increasingly hinge on this provenance
+  trail rather than on expert testimony alone.</p>
+
+  <h2 id="t4-browser-native-swmm">Browser-native SWMM</h2>
+  <p>The engine was compiled to WebAssembly in 2025 (<code>swmm-wasm</code>) and to WebGPU in
+  2028. A full 50,000-node citywide simulation now runs in a tab — no install, no Windows VM.
+  Educational uptake has been dramatic: by 2030, more than 180 universities use the browser
+  build as their primary teaching platform.</p>
+
+  <h2 id="t4-capacity-building-in-the-global-south">Capacity building in the Global South</h2>
+  <p>UNESCO-IHE's SWMM Academy, the World Bank's City Resilience Program, and the African Water
+  Association co-fund a free certification track in English, French, Portuguese, Spanish, Arabic,
+  Mandarin, Swahili, and Bahasa Indonesia. By 2030, over 62,000 practitioners hold a SWMM
+  certification, more than triple the 2024 total, with the fastest growth in West Africa and
+  Southeast Asia.</p>
+
+  <h2 id="t4-critiques-and-open-problems">Critiques &amp; open problems</h2>
+  <p>Critics note that openness does not automatically translate into equity: the most data-rich
+  models still concentrate in wealthy cities, and learned closures inherit those biases.
+  Ongoing work focuses on (i) sparse-data calibration techniques, (ii) culturally appropriate
+  default LID libraries, and (iii) co-design protocols that include community knowledge as
+  first-class model inputs.</p>
+
+  <hr/>
+  <p style="font-size:13px;color:var(--muted)">
+    <span class="pill">Open Models Directive</span>
+    <span class="pill">SWMM-JSON 1.0</span>
+    <span class="pill">FAIR</span>
+    <span class="pill">Justice40</span>
+    <span class="pill">WebGPU</span>
+    <span class="pill">PROV-O</span>
+  </p>
+</article>
+
+</main>
+
+<footer>
+  Speculative 2030 alternates · Built as a side-by-side comparison with the current Wikipedia article.<br/>
+  Content of the "Current" tab summarizes the live Wikipedia entry on the Storm Water Management Model.
+</footer>
+
+<script>
+  const buttons = document.querySelectorAll('.tab-btn');
+  const panels  = document.querySelectorAll('article');
+
+  // Build a map: anchor id -> tab id (so deep links know which tab to open)
+  const anchorToTab = {};
+  panels.forEach(panel => {
+    panel.querySelectorAll('[id]').forEach(el => {
+      if (el.id && el.id !== panel.id) anchorToTab[el.id] = panel.id;
+    });
+  });
+
+  // --- Per-tab scroll memory ---
+  const SCROLL_KEY = 'swmm5_2030_tab_scroll';
+  const tabScroll = (() => {
+    try { return JSON.parse(sessionStorage.getItem(SCROLL_KEY)) || {}; }
+    catch { return {}; }
+  })();
+  function saveCurrentScroll() {
+    const cur = document.querySelector('article.active');
+    if (!cur) return;
+    tabScroll[cur.id] = window.scrollY;
+    try { sessionStorage.setItem(SCROLL_KEY, JSON.stringify(tabScroll)); } catch {}
+  }
+  window.addEventListener('beforeunload', saveCurrentScroll);
+  let scrollSaveTimer;
+  window.addEventListener('scroll', () => {
+    clearTimeout(scrollSaveTimer);
+    scrollSaveTimer = setTimeout(saveCurrentScroll, 120);
+  }, {passive: true});
+
+  function activateTab(tabId, {scrollTop = true, restoreScroll = false, scrollToY = null} = {}) {
+    saveCurrentScroll();
+    buttons.forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
+    panels.forEach(p => p.classList.toggle('active', p.id === tabId));
+    if (scrollToY != null) {
+      window.scrollTo({top: scrollToY, behavior: 'instant'});
+    } else if (restoreScroll && tabScroll[tabId] != null) {
+      window.scrollTo({top: tabScroll[tabId], behavior: 'instant'});
+    } else if (scrollTop) {
+      window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+    refreshObservers();
+  }
+
+  // --- History helpers: every navigation pushes a state {tab, anchor, scrollY} ---
+  let suppressHistory = false; // true while handling popstate, so we don't push
+  function pushNavState(tabId, anchor) {
+    if (suppressHistory) return;
+    const state = {tab: tabId, anchor: anchor || null, scrollY: window.scrollY};
+    const url = anchor
+      ? location.pathname + location.search + '#' + anchor
+      : location.pathname + location.search;
+    history.pushState(state, '', url);
+  }
+
+  // Seed the initial history entry so the very first back button works
+  history.replaceState(
+    {tab: (document.querySelector('article.active') || {}).id || 't0',
+     anchor: decodeURIComponent(location.hash.replace(/^#/, '')) || null,
+     scrollY: window.scrollY},
+    '', location.href
+  );
+
+  // --- Tab click: push new history entry, restore that tab's last scroll position ---
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.tab;
+      // Save current scroll into current history entry before navigating away
+      const cur = history.state || {};
+      history.replaceState({...cur, scrollY: window.scrollY}, '', location.href);
+      activateTab(id, {scrollTop: false, restoreScroll: true});
+      pushNavState(id, null);
+    });
+  });
+
+  // --- TOC click: switch tab if needed, smooth-scroll, push history entry ---
+  document.querySelectorAll('.toc a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const anchor = a.getAttribute('href').slice(1);
+      const targetTab = anchorToTab[anchor];
+      if (!targetTab) return;
+      e.preventDefault();
+      const cur = history.state || {};
+      history.replaceState({...cur, scrollY: window.scrollY}, '', location.href);
+      if (!document.getElementById(targetTab).classList.contains('active')) {
+        activateTab(targetTab, {scrollTop: false});
+      }
+      const el = document.getElementById(anchor);
+      if (el) el.scrollIntoView({behavior: 'smooth', block: 'start'});
+      highlightTocLink(anchor);
+      pushNavState(targetTab, anchor);
+    });
+  });
+
+  // --- Deep-link on first load (no history entry yet) ---
+  function openFromHash() {
+    const hash = decodeURIComponent(location.hash.replace(/^#/, ''));
+    if (!hash) return;
+    if (anchorToTab[hash]) {
+      activateTab(anchorToTab[hash], {scrollTop: false});
+      requestAnimationFrame(() => {
+        const el = document.getElementById(hash);
+        if (el) el.scrollIntoView({behavior: 'instant', block: 'start'});
+        highlightTocLink(hash);
+      });
+    } else if (document.getElementById(hash) && hash.match(/^t\d+$/)) {
+      activateTab(hash);
+    }
+  }
+
+  // --- Back / Forward: restore tab + scroll from history state ---
+  window.addEventListener('popstate', (e) => {
+    suppressHistory = true;
+    const st = e.state;
+    if (st && st.tab && document.getElementById(st.tab)) {
+      activateTab(st.tab, {scrollTop: false});
+      requestAnimationFrame(() => {
+        if (st.anchor) {
+          const el = document.getElementById(st.anchor);
+          if (el) el.scrollIntoView({behavior: 'instant', block: 'start'});
+          highlightTocLink(st.anchor);
+        }
+        if (typeof st.scrollY === 'number') {
+          window.scrollTo({top: st.scrollY, behavior: 'instant'});
+        }
+        suppressHistory = false;
+      });
+    } else {
+      // Fallback: derive from URL hash
+      openFromHash();
+      suppressHistory = false;
+    }
+  });
+
+  // --- Active-section highlighting via IntersectionObserver (per active tab) ---
+  let currentObserver = null;
+  function highlightTocLink(anchorId) {
+    document.querySelectorAll('.toc a.toc-active').forEach(a => a.classList.remove('toc-active'));
+    if (!anchorId) return;
+    const link = document.querySelector('.toc a[href="#' + CSS.escape(anchorId) + '"]');
+    if (link) link.classList.add('toc-active');
+  }
+
+  function refreshObservers() {
+    if (currentObserver) currentObserver.disconnect();
+    const active = document.querySelector('article.active');
+    if (!active) return;
+    const headings = Array.from(active.querySelectorAll('h2[id], h3[id]'));
+    if (!headings.length) return;
+
+    // Track visibility of every heading; pick the topmost one above the
+    // viewport's "reading line" (just below the sticky tab bar).
+    const visible = new Map();
+    currentObserver = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) visible.set(e.target.id, e.boundingClientRect.top);
+        else visible.delete(e.target.id);
+      });
+      pickActiveHeading(headings, visible);
+    }, {
+      // Treat the area between just-below-the-nav and the bottom 40% as "in view"
+      rootMargin: '-80px 0px -55% 0px',
+      threshold: 0
+    });
+    headings.forEach(h => currentObserver.observe(h));
+    // Initial pick
+    requestAnimationFrame(() => pickActiveHeading(headings, visible, true));
+  }
+
+  function pickActiveHeading(headings, visible, fallback = false) {
+    let pick = null;
+    if (visible.size) {
+      // Pick the heading nearest the top of the reading area
+      pick = [...visible.entries()].sort((a, b) => a[1] - b[1])[0][0];
+    } else if (fallback) {
+      // Nothing intersecting — pick the last heading whose top is above the nav line
+      const line = 100;
+      for (const h of headings) {
+        if (h.getBoundingClientRect().top <= line) pick = h.id;
+        else break;
+      }
+      if (!pick) pick = headings[0].id;
+    }
+    if (pick) highlightTocLink(pick);
+  }
+
+  // Initial bootstrap
+  openFromHash();
+  refreshObservers();
+</script>
+
+</body>
+</html>
