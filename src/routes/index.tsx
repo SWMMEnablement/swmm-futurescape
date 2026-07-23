@@ -127,7 +127,6 @@ function Index() {
 
   useEffect(() => {
     let cancelled = false;
-    let timeoutId: number | undefined;
 
     fetch(PAGE_URL, { method: "GET" })
       .then((r) => {
@@ -141,6 +140,8 @@ function Index() {
             httpStatusText: r.statusText,
             message: `Server returned HTTP ${r.status} ${r.statusText} for ${PAGE_URL}`,
           });
+        } else {
+          setStatus("ready");
         }
       })
       .catch((e) => {
@@ -153,24 +154,8 @@ function Index() {
         });
       });
 
-    timeoutId = window.setTimeout(() => {
-      if (cancelled) return;
-      setStatus((prev) => {
-        if (prev === "ready") return prev;
-        setDiag({
-          reason: "timeout",
-          path: PAGE_URL,
-          timedOutAfterMs: LOAD_TIMEOUT_MS,
-          message: `Iframe did not signal load within ${LOAD_TIMEOUT_MS}ms.`,
-          assetErrors: assetErrorsRef.current,
-        });
-        return "error";
-      });
-    }, LOAD_TIMEOUT_MS);
-
     return () => {
       cancelled = true;
-      if (timeoutId) window.clearTimeout(timeoutId);
     };
   }, [runId]);
 
