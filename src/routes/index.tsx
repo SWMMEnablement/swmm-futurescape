@@ -28,11 +28,57 @@ type Diagnostic = {
   assetErrors?: { url: string; status?: number; type: string }[];
 };
 
+type AssetCheck = { url: string; status: number | "error"; ok: boolean };
+
 function Index() {
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [diag, setDiag] = useState<Diagnostic | null>(null);
+  const [assetWarnings, setAssetWarnings] = useState<AssetCheck[]>([]);
+  const [warningDismissed, setWarningDismissed] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const assetErrorsRef = useRef<Diagnostic["assetErrors"]>([]);
+
+  // Preflight probe: fetch the HTML, then HEAD every non-hash href/src it
+  // references. Any 404/network failure surfaces as a dismissible warning.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(PAGE_URL);
+        if (!res.ok || cancelled) return;
+        const html = await res.text();
+        const urls = new Set<string>();
+        const re = /(?:src|href)\s*=\s*["']([^"']+)["']/gi;
+        let m: RegExpExecArray | null;
+        while ((m = re.exec(html))) {
+          const u = m[1].trim();
+          if (!u || u.startsWith("#") || u.startsWith("data:") || u.startsWith("javascript:") || u.startsWith("mailto:")) continue;
+          urls.add(u);
+        }
+        const checks = await Promise.all(
+          Array.from(urls).map(async (url): Promise<AssetCheck | null> => {
+            try {
+              const r = await fetch(url, { method: "HEAD", mode: "no-cors" });
+              // opaque responses (no-cors) report status 0; treat as ok
+              if (r.type === "opaque") return null;
+              return r.ok ? null : { url, status: r.status, ok: false };
+            } catch {
+              return { url, status: "error", ok: false };
+            }
+          }),
+        );
+        if (cancelled) return;
+        const failed = checks.filter((c): c is AssetCheck => !!c);
+        if (failed.length) setAssetWarnings(failed);
+      } catch {
+        /* main-page failure is handled by the error panel below */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
 
   useEffect(() => {
     let cancelled = false;
