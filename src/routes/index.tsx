@@ -28,11 +28,57 @@ type Diagnostic = {
   assetErrors?: { url: string; status?: number; type: string }[];
 };
 
+type AssetCheck = { url: string; status: number | "error"; ok: boolean };
+
 function Index() {
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [diag, setDiag] = useState<Diagnostic | null>(null);
+  const [assetWarnings, setAssetWarnings] = useState<AssetCheck[]>([]);
+  const [warningDismissed, setWarningDismissed] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const assetErrorsRef = useRef<Diagnostic["assetErrors"]>([]);
+
+  // Preflight probe: fetch the HTML, then HEAD every non-hash href/src it
+  // references. Any 404/network failure surfaces as a dismissible warning.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(PAGE_URL);
+        if (!res.ok || cancelled) return;
+        const html = await res.text();
+        const urls = new Set<string>();
+        const re = /(?:src|href)\s*=\s*["']([^"']+)["']/gi;
+        let m: RegExpExecArray | null;
+        while ((m = re.exec(html))) {
+          const u = m[1].trim();
+          if (!u || u.startsWith("#") || u.startsWith("data:") || u.startsWith("javascript:") || u.startsWith("mailto:")) continue;
+          urls.add(u);
+        }
+        const checks = await Promise.all(
+          Array.from(urls).map(async (url): Promise<AssetCheck | null> => {
+            try {
+              const r = await fetch(url, { method: "HEAD", mode: "no-cors" });
+              // opaque responses (no-cors) report status 0; treat as ok
+              if (r.type === "opaque") return null;
+              return r.ok ? null : { url, status: r.status, ok: false };
+            } catch {
+              return { url, status: "error", ok: false };
+            }
+          }),
+        );
+        if (cancelled) return;
+        const failed = checks.filter((c): c is AssetCheck => !!c);
+        if (failed.length) setAssetWarnings(failed);
+      } catch {
+        /* main-page failure is handled by the error panel below */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
 
   useEffect(() => {
     let cancelled = false;
@@ -225,6 +271,47 @@ function Index() {
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100vh", background: "#f6f6f4" }}>
+      {assetWarnings.length > 0 && !warningDismissed && (
+        <div
+          role="alert"
+          style={{
+            position: "absolute",
+            top: 12,
+            left: 12,
+            right: 12,
+            zIndex: 2,
+            background: "#fffbeb",
+            border: "1px solid #fcd34d",
+            color: "#78350f",
+            borderRadius: 8,
+            padding: "10px 14px",
+            fontFamily: "system-ui, -apple-system, sans-serif",
+            fontSize: 13,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+            <strong>
+              ⚠ {assetWarnings.length} asset{assetWarnings.length === 1 ? "" : "s"} failed to load
+            </strong>
+            <button
+              onClick={() => setWarningDismissed(true)}
+              style={{ background: "transparent", border: 0, color: "#78350f", cursor: "pointer", fontSize: 16, lineHeight: 1 }}
+              aria-label="Dismiss"
+            >
+              ×
+            </button>
+          </div>
+          <ul style={{ margin: "6px 0 0", paddingLeft: 18, maxHeight: 140, overflow: "auto" }}>
+            {assetWarnings.map((a, i) => (
+              <li key={i}>
+                <code>{a.status === "error" ? "network error" : `HTTP ${a.status}`}</code> — {a.url}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {status === "loading" && (
         <div
           style={{
