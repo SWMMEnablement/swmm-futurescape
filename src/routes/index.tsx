@@ -271,6 +271,47 @@ function Index() {
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100vh", background: "#f6f6f4" }}>
+      {assetWarnings.length > 0 && !warningDismissed && (
+        <div
+          role="alert"
+          style={{
+            position: "absolute",
+            top: 12,
+            left: 12,
+            right: 12,
+            zIndex: 2,
+            background: "#fffbeb",
+            border: "1px solid #fcd34d",
+            color: "#78350f",
+            borderRadius: 8,
+            padding: "10px 14px",
+            fontFamily: "system-ui, -apple-system, sans-serif",
+            fontSize: 13,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+            <strong>
+              ⚠ {assetWarnings.length} asset{assetWarnings.length === 1 ? "" : "s"} failed to load
+            </strong>
+            <button
+              onClick={() => setWarningDismissed(true)}
+              style={{ background: "transparent", border: 0, color: "#78350f", cursor: "pointer", fontSize: 16, lineHeight: 1 }}
+              aria-label="Dismiss"
+            >
+              ×
+            </button>
+          </div>
+          <ul style={{ margin: "6px 0 0", paddingLeft: 18, maxHeight: 140, overflow: "auto" }}>
+            {assetWarnings.map((a, i) => (
+              <li key={i}>
+                <code>{a.status === "error" ? "network error" : `HTTP ${a.status}`}</code> — {a.url}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {status === "loading" && (
         <div
           style={{
