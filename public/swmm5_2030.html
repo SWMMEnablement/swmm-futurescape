@@ -1037,6 +1037,15 @@
   }
 
   // Initial bootstrap
+  // Cross-tab jump links (e.g. fiction-banner "see Counter-scenarios tab")
+  document.querySelectorAll('[data-jump-tab]').forEach(el => {
+    el.addEventListener('click', e => {
+      e.preventDefault();
+      const id = el.getAttribute('data-jump-tab');
+      if (document.getElementById(id)) { activateTab(id); pushNavState(id, null); }
+    });
+  });
+
   openFromHash();
   refreshObservers();
 </script>
