@@ -1118,8 +1118,145 @@
     });
   });
 
+  // ---- Interactive scenario timelines (2026 → 2030) ----
+  const TIMELINE_DATA = {
+    A: {
+      title: "Scenario A · AI-Native adoption path",
+      sub: "Assumed steps for regulators to accept hybrid physics + ML solvers by 2030",
+      items: [
+        {y:2026,q:3,cat:"research",   t:"EPA workshop: ML in regulatory models",  d:"EPA/ORD convenes vendors + academics to scope evaluation criteria for learned components inside physics models. Outputs feed 2027 draft guidance."},
+        {y:2027,q:1,cat:"standard",   t:"FEMA draft: learned components in flood models", d:"FEMA circulates draft policy classifying ML use as assistive, hybrid, or surrogate — parallel to the three-tier table in this scenario."},
+        {y:2027,q:4,cat:"research",   t:"Open PINN training corpora + benchmark suite", d:"Public benchmarks (rainfall–runoff, 1D pipe surge, 2D overland) with reference weights make external audit possible."},
+        {y:2028,q:2,cat:"standard",   t:"Model cards & audit tooling required",   d:"EPA guidance mandates model cards, provenance manifests, and out-of-distribution monitors for any learned component."},
+        {y:2029,q:1,cat:"deployment", t:"SWMM 6.5 ships optional PINN preprocessor", d:"Backward-compatible EPA release adds ML-based rainfall QA and calibration assist — kernel stays classical. Adoption pathway begins."},
+        {y:2029,q:3,cat:"policy",     t:"FEMA approves hybrid physics+ML for design use", d:"Approval scoped to hybrid mode with physics fallback. Full surrogate mode remains research-only. This is the critical gate for Scenario A."},
+        {y:2030,q:1,cat:"deployment", t:"SWMM 7.4 “Hydra” GA — dynwave-pinn default", d:"Hybrid dynamic-wave / PINN solver becomes the default at release. Claimed 8–40× speedups are the fictional headline outcome."},
+      ],
+    },
+    B: {
+      title: "Scenario B · Climate-Resilient regulatory path",
+      sub: "Assumed policy + standards cascade that makes nonstationary IDF the design default",
+      items: [
+        {y:2026,q:3,cat:"standard",   t:"NOAA Atlas 15 volumes begin publication", d:"Atlas 15 supersedes Atlas 14 with nonstationary and climate-adjusted IDF products. This is the real anchor signal for the scenario."},
+        {y:2027,q:1,cat:"policy",     t:"EPA proposes NPDES nonstationary-rainfall rule", d:"Draft rule requires MS4s and CSO communities to design against future-climate rainfall for new/rehabilitated infrastructure."},
+        {y:2027,q:4,cat:"deployment", t:"12 US states cite Atlas 15 in drainage manuals", d:"Early adopters update state DOT / stormwater manuals to reference Atlas 15 depths. Litigation-averse states lag."},
+        {y:2028,q:2,cat:"policy",     t:"EU CSO Directive 2028 enters into force",  d:"Revised Urban Wastewater Treatment framework tightens CSO limits and pushes member states toward continuous simulation."},
+        {y:2028,q:4,cat:"standard",   t:"FEMA guidance references future-climate IDF", d:"FEMA updates flood-study specs to permit — and in some zones require — projected precipitation for design-life horizons."},
+        {y:2029,q:3,cat:"deployment", t:"SWMM–SCHISM–ADCIRC compound-flood bundle", d:"Coupled surge + rainfall + riverine tooling packaged for coastal utilities. Enables the compound-flood claims in this scenario."},
+        {y:2030,q:1,cat:"policy",     t:"43 US states adopt NPDES rule; coastal pilots", d:"Fictional endpoint: named New Orleans / Jakarta / Lagos pilots demonstrate the coupled workflow at city scale."},
+      ],
+    },
+    C: {
+      title: "Scenario C · Digital Twin + IoT deployment path",
+      sub: "Assumed sensor, cyber, and operational steps behind SWMM-Live",
+      items: [
+        {y:2026,q:4,cat:"research",   t:"Utility EnKF pilots publish results",     d:"Peer-reviewed operational hydrology papers show ensemble Kalman filtering closes the sim-to-sensor gap on real networks."},
+        {y:2027,q:2,cat:"deployment", t:"Two US utilities pilot SWMM-Live",         d:"Read-only decision-support twins go live. No actuation yet — human operators still command all gates and pumps."},
+        {y:2027,q:4,cat:"standard",   t:"OGC WaterML-DT profile draft",             d:"Draft OGC profile standardizes telemetry, state, and forecast exchange between SCADA, twin, and forecast systems."},
+        {y:2028,q:2,cat:"policy",     t:"EPA “Cyber Hygiene” rule for water utilities", d:"Sector-specific rule requires network segmentation, signed firmware, and audit logs before any cloud-to-SCADA control loop."},
+        {y:2028,q:4,cat:"deployment", t:"Sensor networks at 25 utilities",           d:"LoRaWAN / NB-IoT / 5G RedCap deployments reach scale needed for meaningful data assimilation (>1 sensor per ~5 km of trunk sewer)."},
+        {y:2029,q:2,cat:"deployment", t:"South Bend RL-RTC pilot begins",            d:"First reinforcement-learning real-time control pilot with human-in-the-loop authority over pumps + inflatable weirs. Fictional case study."},
+        {y:2030,q:1,cat:"deployment", t:"SWMM-Live 1.0 · claimed 71% CSO reduction", d:"Scenario endpoint. Real-world results would depend heavily on baseline; figure is illustrative only."},
+      ],
+    },
+    D: {
+      title: "Scenario D · Open Science + Equity adoption path",
+      sub: "Assumed steps to a public model commons on an open exchange standard",
+      items: [
+        {y:2026,q:3,cat:"standard",   t:"SWMM-JSON RFC drafted at OGC",            d:"Community RFC replaces .inp text format with a schema-validated JSON exchange format; back-compat converters ship first."},
+        {y:2027,q:1,cat:"research",   t:"SWMM Commons repo launched",              d:"Initial repo hosts ~5k synthetic + teaching networks. Real utility networks remain private due to security concerns."},
+        {y:2027,q:4,cat:"standard",   t:"SWMM-JSON 1.0 ratified by OGC",           d:"Formal ratification unlocks tool interoperability and enables the reproducibility levels described in this scenario."},
+        {y:2028,q:2,cat:"research",   t:"WebGPU solver benchmarks published",       d:"Browser-native solver runs full dynamic-wave networks; enables the “open in browser” review workflow."},
+        {y:2028,q:4,cat:"policy",     t:"FAIR-data mandate for federally-funded models", d:"Federally-funded modeling deliverables must be FAIR by default — the biggest single driver of commons growth."},
+        {y:2029,q:3,cat:"deployment", t:"UNESCO-IHE + EPA host ~24k models",        d:"Governance partnership brings review, licensing, and takedown workflows. Real utility contributions begin."},
+        {y:2030,q:1,cat:"deployment", t:"~48k public networks · stable browser solver", d:"Scenario endpoint. Adoption at this scale assumes contract-language and IP concerns are largely resolved."},
+      ],
+    },
+  };
+  const YEAR_MIN=2026, YEAR_MAX=2030;
+  const CATS=[
+    {id:"policy",     label:"Policy"},
+    {id:"standard",   label:"Standard"},
+    {id:"deployment", label:"Deployment"},
+    {id:"research",   label:"Research"},
+  ];
+
+  function renderTimeline(root){
+    const data=TIMELINE_DATA[root.dataset.scenario];
+    if(!data) return;
+    const filters=CATS.map(c=>`<button data-cat="${c.id}" class="on"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;background:${{policy:'#2563eb',standard:'#7c3aed',deployment:'#059669',research:'#d97706'}[c.id]}"></span>${c.label}</button>`).join('');
+    const years=[];
+    for(let y=YEAR_MIN;y<=YEAR_MAX;y++) years.push(`<span>${y}</span>`);
+    root.innerHTML=`
+      <h4>2026 → 2030 timeline <span class="conf med">design fiction</span></h4>
+      <div class="stl-sub">${data.sub}. Click a milestone for details; filter by category.</div>
+      <div class="stl-filters" role="group" aria-label="Filter by milestone category">${filters}
+        <button data-cat="__reset" style="margin-left:auto">Show all</button>
+      </div>
+      <div class="stl-track">
+        <div class="stl-axis"></div>
+        <div class="stl-years">${years.join('')}</div>
+      </div>
+      <div class="stl-detail" aria-live="polite"><div class="stl-empty">Select a milestone above to see the assumed step.</div></div>
+    `;
+    const axis=root.querySelector('.stl-axis');
+    const detail=root.querySelector('.stl-detail');
+    const span=YEAR_MAX-YEAR_MIN+1; // years count
+    data.items.forEach((it,idx)=>{
+      const pos=((it.y+(it.q-1)/4)-YEAR_MIN)/(span-1)*100;
+      const dot=document.createElement('button');
+      dot.type='button';
+      dot.className='stl-dot';
+      dot.dataset.cat=it.cat;
+      dot.dataset.idx=idx;
+      dot.style.left=pos+'%';
+      dot.setAttribute('aria-label',`${it.y} Q${it.q} — ${it.t}`);
+      const label=document.createElement('span');
+      label.className='stl-label';
+      label.style.left=pos+'%';
+      label.textContent=`${it.y} Q${it.q}`;
+      dot.addEventListener('click',()=>selectItem(root,data,idx));
+      axis.appendChild(dot);
+      axis.appendChild(label);
+    });
+    root.querySelectorAll('.stl-filters button').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const cat=btn.dataset.cat;
+        if(cat==='__reset'){
+          root.querySelectorAll('.stl-filters button[data-cat]').forEach(b=>{ if(b.dataset.cat!=='__reset') b.classList.add('on'); });
+        } else {
+          btn.classList.toggle('on');
+        }
+        applyFilter(root);
+      });
+    });
+    // auto-select first item so the panel is never empty
+    selectItem(root,data,0);
+  }
+  function applyFilter(root){
+    const active=new Set([...root.querySelectorAll('.stl-filters button[data-cat].on')].map(b=>b.dataset.cat));
+    root.querySelectorAll('.stl-dot').forEach(d=>{
+      d.classList.toggle('hidden', !active.has(d.dataset.cat));
+    });
+  }
+  function selectItem(root,data,idx){
+    const it=data.items[idx];
+    root.querySelectorAll('.stl-dot').forEach(d=>d.classList.toggle('sel', +d.dataset.idx===idx));
+    const catLabel=(CATS.find(c=>c.id===it.cat)||{}).label||it.cat;
+    root.querySelector('.stl-detail').innerHTML=`
+      <div class="stl-meta">
+        <span class="stl-cat ${it.cat}">${catLabel}</span>
+        <span>${it.y} · Q${it.q}</span>
+      </div>
+      <h5>${it.t}</h5>
+      <div>${it.d}</div>
+    `;
+  }
+  document.querySelectorAll('.scenario-timeline').forEach(renderTimeline);
+
   openFromHash();
   refreshObservers();
+
 </script>
 
 </body>
